@@ -1,7 +1,9 @@
 (ns echoecho.echo
   "This is will be a temporary main file"
-  (:require [clojure.java.io :as io])
-  (:import [java.net ServerSocket])
+  (:require [clojure.java.io :as io]
+            [taoensso.timbre :as timbre])
+  (:import [java.net ServerSocket]
+           [java.net Socket])
   (:gen-class))
 
 (defn receive!
@@ -38,13 +40,17 @@
         ;; Calls server-sockets accept method. Blocks until
         ;; sessixon is established. Returs Socket instance upon
         ;; successful connection of client
-        socket (.accept server-socket)]
+        socket (.accept server-socket)
+        msg-in (atom (receive! socket))
+        msg-out (handler @msg-in)]
+    (timbre/info "Session between client and server established on port:"
+                 (.getPort socket))
     (loop []
       (when-not (.isClosed socket)
-        (send! socket (receive! socket)))
+        (send! socket msg-out))
       (recur))))
 
 (defn -main
   "The entry point of our application"
   [& _]
-  (serve 7007 echo))
+  (serve! 7007 echo))
