@@ -7,9 +7,9 @@ The default port exposed is - 127.0.0.1:7007
 
 ## Getting Started
 
-To start the program, clone this repository and run the below shell
-command
+To start the program, clone this repository
 
+To start server
 ``` shell
 $ clj -M -m echoecho.echo
 ```
@@ -31,14 +31,23 @@ Connected to localhost.
 Escape character is '^]'.
 this
 this
-that
-that
-with
-with
-more
-more
-not
-not
-chat
-chat
 ```
+
+To connect to the server using chat client
+``` shell
+$ clj -M -m echoecho.client
+```
+
+Currently the program just echo whatever the client sends
+``` shell
+$ clj -M -m echoecho.client
+Send: Hi
+Receive: Hi
+Send: How are you?
+Receive: How are you?
+```
+
+TODO:
+- Support multiple cleint
+- Add name for each client
+- Support chat
