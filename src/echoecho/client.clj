@@ -1,59 +1,59 @@
 (ns echoecho.client
-  (:require [clojure.java.io :as io])
-  (:import [java.net InetAddress]
-           [java.net Socket])
+  (:import
+   [java.io
+    DataInputStream
+    DataOutputStream
+    OutputStreamWriter
+    PrintWriter
+    BufferedReader
+    InputStreamReader]
+   [java.net
+    InetAddress
+    Socket])
   (:gen-class))
 
-(def +running+ (atom true))
-
-(defn read-input
+(defn read-input!
+  "Returns user-input. This blocsk the current thread."
   []
   (print "Send: ")
   (flush)
   (read-line))
 
-(defn send-user-input!
-  [socket input]
-  ;; write to the socket
-  (let [writer (io/writer socket)]
-    (.write writer input)
-    (.flush writer)))
-
-(defn read-user-input!
+(defn socket-input-stream
+  "Returns a BufferedReader of Socket's InputStream."
   [socket]
-  (let [user-input (read-input)]
-    (send-user-input! socket user-input)))
+  (BufferedReader.
+   (InputStreamReader.
+    (.getInputStream socket))))
 
-(defn receive-server-ouput
+(defn socket-output-stream
+  "Returns a PrintWriter of Socket's OutputStream."
   [socket]
-  (let [reader (io/reader socket)]
-    (print "Receive: ")
-    (.readLine reader)))
+  (PrintWriter.
+   (OutputStreamWriter.
+    (.getOutputStream socket))))
 
-(defn repeatedly-read-user-input!
-  [socket]
-  (future
-    (loop []
-      (when @+running+
-        (read-user-input! socket)
-        (println (receive-server-ouput socket)))
-      (recur))))
-
-(defn client
-  "Given a part number, connect to that port and returns the socket"
+(defn client!
   [port]
   (let [host-name (.getHostName (InetAddress/getLocalHost))
-        socket (Socket. host-name port)]
-    socket))
-
-(defn chat
-  [port]
-  (let [socket (client 7007)]
-    (repeatedly-read-user-input! socket)
-    (Thread/sleep 10000)
-    (.close socket)
-    (swap! +running+ not)))
+        socket (Socket. host-name port)
+        user-input (atom nil) ;; This will block the current thread
+        socket-input-stream (socket-input-stream socket)
+        socket-output-stream (socket-output-stream socket)
+        msg (atom nil)]
+    (while (not= "quit" @msg)
+      ;; Get user input in an atom and block the current thread
+      (reset! user-input (read-input!))
+      ;; Write the user input to the socket output stream. The println
+      ;; method is not connected to stdout, therefore it won't print
+      ;; anything on stdout
+      (.println socket-output-stream @user-input)
+      (.flush socket-output-stream)
+      (reset! msg (.readLine socket-input-stream))
+      (print "Receive:" @msg "\n"))
+    (.close socket-output-stream)
+    (.close socket)))
 
 (defn -main
   [& _]
-  (chat 7007))
+  (client! 7007))
