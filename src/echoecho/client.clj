@@ -1,16 +1,19 @@
 (ns echoecho.client
-  (:import
-   [java.io
-    DataInputStream
-    DataOutputStream
-    OutputStreamWriter
-    PrintWriter
-    BufferedReader
-    InputStreamReader]
-   [java.net
-    InetAddress
-    Socket])
+  (:import [java.io
+            OutputStreamWriter
+            PrintWriter
+            BufferedReader
+            InputStreamReader]
+           [java.net
+            InetAddress
+            Socket])
   (:gen-class))
+
+(defn localhost []
+  (InetAddress/getLocalHost))
+
+(defn host-name [^InetAddress address]
+  (.getHostName address))
 
 (defn read-input!
   "Returns user-input. This blocsk the current thread."
@@ -35,7 +38,7 @@
 
 (defn client!
   [port]
-  (let [host-name (.getHostName (InetAddress/getLocalHost))
+  (let [host-name (host-name (localhost))
         socket (Socket. host-name port)
         user-input (atom nil) ;; This will block the current thread
         socket-input-stream (socket-input-stream socket)
