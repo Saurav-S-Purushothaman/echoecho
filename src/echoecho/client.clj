@@ -4,8 +4,11 @@
             PrintWriter
             BufferedReader
             InputStreamReader]
+           [java.nio.channels SocketChannel]
+           [java.nio.channels.spi SelectorProvider]
            [java.net
             InetAddress
+            InetSocketAddress
             Socket])
   (:gen-class))
 
@@ -38,8 +41,13 @@
 
 (defn client!
   [port]
-  (let [host-name (host-name (localhost))
-        socket (Socket. host-name port)
+  (let [host-name' (host-name (localhost))
+        inet-socket-address (InetSocketAddress. host-name' port)
+        ;; PrintWriter and Buffered reader also use the write method and
+        ;; read method to read and write to socket, this shouls probably
+        ;; work with the current implementation. We can change it later.
+        socket (.connect (SocketChannel/open) inet-socket-address)
+        ;; Assumming that PrintWriter and the
         user-input (atom nil) ;; This will block the current thread
         socket-input-stream (socket-input-stream socket)
         socket-output-stream (socket-output-stream socket)
