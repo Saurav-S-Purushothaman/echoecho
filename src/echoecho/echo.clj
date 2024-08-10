@@ -12,6 +12,7 @@
   [arg]
   (str arg "\n"))
 
+
 (defn create-async-socket [chan server-socket]
   (.accept server-socket))
 
@@ -24,9 +25,9 @@
         socket-output-stream (DataOutputStream. (.getOutputStream socket))
         msg-in (atom nil)
         msg-out (atom nil)]
-    ;; For now, lets just have two channels
-    (future (create-async-socket chan server-socket))
     ;; Type /quit to quit the connection.
+    ;; TODO: We need to change this imperative way of doing things to
+    ;; functional sytel using recursion or sequence operation.
     (while (not= @msg-in  "/quit")
       (reset! msg-in (.readLine socket-input-stream))
       (reset! msg-out (handler @msg-in))
