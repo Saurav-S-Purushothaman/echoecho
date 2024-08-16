@@ -8,9 +8,11 @@
   (:require [taoensso.timbre :as timbre])
   (:gen-class))
 
+
 (defn get-socket-channel
   [key-channel]
   (cast java.nio.channels.ServerSocketChannel key-channel))
+
 
 (defn client-host
   [client]
@@ -18,9 +20,11 @@
     (.getInetAddress)
     (.getHostAddress)))
 
+
 (defn client-port
   [client]
   (.getPort client))
+
 
 (defn client-info
   [client-socket]
@@ -31,6 +35,7 @@
     (timbre/info "Connected:" log)
     (timbre/info "Type of client socket :" (type client-socket))))
 
+
 (defn initialize-server-socket!
   "Sets up the server socket channel for non-blocking operations, binds
   it to the given address, and registers it with the selector for
@@ -40,6 +45,7 @@
   (.bind server-socket-channel inet-address)
   (.register server-socket-channel selector (SelectionKey/OP_ACCEPT)))
 
+
 (defn initialize-client-socket!
   "Sets up the server socket channel for non-blocking operations,
   registers it with the selector for accepting connections and adds the
@@ -48,6 +54,7 @@
   (.configureBlocking client false)
   (.register client selector (SelectionKey/OP_READ))
   (swap! clients-state conj client))
+
 
 (defn close-client-socket!
   [clients-state]
@@ -61,6 +68,7 @@
 
 ;; Storing all the clients in an atom to close it finally.
 (defonce clients-state (atom #{}))
+
 
 (defn start-server
   [port-number]
@@ -92,9 +100,11 @@
       (throw (RuntimeException. e)))
     (finally (close-client-socket! clients-state))))
 
+
 (defn -main
   [& args]
   (start-server 7007))
+
 
 (comment
   (start-server 7007))
