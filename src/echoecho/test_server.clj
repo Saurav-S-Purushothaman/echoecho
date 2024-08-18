@@ -1,12 +1,19 @@
 (ns echoecho.test-server
-  (:import [java.nio.channels
-            ServerSocketChannel
-            Selector
-            SelectionKey]
-           [java.net
-            InetSocketAddress])
-  (:require [taoensso.timbre :as timbre])
+  (:import
+   [java.nio.channels
+    SocketChannel
+    ServerSocketChannel
+    Selector
+    SelectionKey]
+   [java.nio ByteBuffer]
+   [java.net
+    InetSocketAddress])
+  (:require
+   [taoensso.timbre :as timbre])
   (:gen-class))
+
+
+(defonce clients-state (atom #{}))
 
 
 (defn get-socket-channel
@@ -14,11 +21,9 @@
   (cast java.nio.channels.ServerSocketChannel key-channel))
 
 
-(defn client-host
-  [client]
-  (doto client
-    (.getInetAddress)
-    (.getHostAddress)))
+(defn get-socket
+  [key-channel]
+  (cast java.nio.channels.SocketChannel key-channel))
 
 
 (defn client-port
@@ -26,33 +31,22 @@
   (.getPort client))
 
 
-(defn client-info
-  [client-socket]
-  (let [host-address (client-host client-socket)
-        port (client-port client-socket)
-        log {:host host-address
-             :port port}]
-    (timbre/info "Connected:" log)
-    (timbre/info "Type of client socket :" (type client-socket))))
-
-
 (defn initialize-server-socket!
-  "Sets up the server socket channel for non-blocking operations, binds
-  it to the given address, and registers it with the selector for
-  accepting connections."
   [server-socket-channel inet-address selector]
-  (.configureBlocking server-socket-channel false)
-  (.bind server-socket-channel inet-address)
-  (.register server-socket-channel selector (SelectionKey/OP_ACCEPT)))
+  (-> server-socket-channel
+      (.configureBlocking false))
+  (-> server-socket-channel
+      (.bind inet-address))
+  (-> server-socket-channel
+      (.register selector (SelectionKey/OP_ACCEPT))))
 
 
 (defn initialize-client-socket!
-  "Sets up the server socket channel for non-blocking operations,
-  registers it with the selector for accepting connections and adds the
-  client to clients-state atom"
   [client selector clients-state]
-  (.configureBlocking client false)
-  (.register client selector (SelectionKey/OP_READ))
+  (-> client
+      (.configureBlocking false))
+  (-> client
+      (.register selector (SelectionKey/OP_READ)))
   (swap! clients-state conj client))
 
 
@@ -66,8 +60,29 @@
       (throw (RuntimeException. e)))))
 
 
-;; Storing all the clients in an atom to close it finally.
-(defonce clients-state (atom #{}))
+(defn close-system!
+  []
+  (do (println "Closing the system") (System/exit 0)))
+
+
+(defn read-channel-or-close-it!
+  "Read from the socket and put into the byte. If read not available
+  close the channel"
+  [client-channel buffer]
+  (let [bytes-read (.read client-channel buffer)]
+    (when (= -1 bytes-read)
+      (timbre/info "Disconnected")
+      (.close client-channel)
+      (swap! clients-state disj client-channel))
+    bytes-read))
+
+
+(defn buffer->string!
+  [buffer bytes-read]
+  (.flip buffer)
+  (String. (.array buffer) (.position buffer) bytes-read)
+  (.clear buffer))
+
 
 
 (defn start-server
@@ -75,28 +90,31 @@
   (try
     (let [server-socket-channel (ServerSocketChannel/open)
           selector (Selector/open)
-          inet-address (InetSocketAddress. port-number)]
+          inet-address (InetSocketAddress. port-number)
+          buffer (ByteBuffer/allocate 1024)]
       (initialize-server-socket! server-socket-channel inet-address selector)
       (loop []
-        ;; this is blocking
-        (if (zero? (.select selector))
-          (do
-            (println "Closing the system")
-            (System/exit 0))
+        (if (zero? (.select selector)) ; Blocking
+          (close-system!)
           (doseq [key (.selectedKeys selector)]
             (let [key-channel (.channel key)]
               (when (.isAcceptable key)
-                (let [;; this is non blocking
-                      key-channel' (get-socket-channel key-channel)
+                ; Non blocking
+                (let [key-channel' (get-socket-channel key-channel)
                       client (.accept key-channel')]
                   ;; Register the client on the same selector but
                   ;; with read key
                   (initialize-client-socket! client selector clients-state)
                   (.register client selector (SelectionKey/OP_READ))
-                  (swap! clients-state conj client))))))
+                  (swap! clients-state conj client)))
+              (when (.isReadable key)
+                (let [client-channel (get-socket key-channel)
+                      bytes-read (read-channel-or-close-it! client-channel buffer)
+                      data (buffer->string! buffer bytes-read)]
+                  (prn data))))))
         (recur)))
     (catch Exception e
-      (timbre/error "Server open failed with Exception: " e)
+      (timbre/error "Failed to open server" e)
       (throw (RuntimeException. e)))
     (finally (close-client-socket! clients-state))))
 
