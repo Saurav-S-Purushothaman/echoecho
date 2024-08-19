@@ -35,7 +35,7 @@ this
 
 To connect to the server using chat client
 ``` shell
-$ clj -M -m echoecho.client
+$ clj -M -m echoecho.echo
 ```
 
 Currently the program just echo whatever the client sends
