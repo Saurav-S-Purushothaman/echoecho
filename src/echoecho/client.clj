@@ -47,13 +47,14 @@
   (let [bytes (.getBytes text)
         buff (ByteBuffer/allocate 48)]
     (.clear buff)
-    (.put buff (.getBytes text))
+    (.put buff bytes)
     ;; set the limit to current position and current position to zero
     (.flip buff)
     (loop [socket socket buff buff]
       (when (.hasRemaining buff)
         (.write socket buff)
         (recur socket buff)))))
+
 
 (defn connect-to-socket!
   [socket inet-address]
@@ -63,6 +64,7 @@
     (catch Exception e
       (println "Connection refused due to excepiton " e)
       (throw (Exception. "Unable to connect to the server")))))
+
 
 (defn client!
   [port]
