@@ -32,13 +32,14 @@
       (reset! msg-in (.readLine socket-input-stream))
       (reset! msg-out (handler @msg-in))
       (.writeBytes socket-output-stream @msg-out)
-      (.flush socket-output-stream))
+      (.flush socket-output-stream)
     (.close socket-input-stream)
-    (.close socket)))
+    (.close socket))))
 
 (defn -main
   [& _]
   (server 7007 echo))
 
-;; TODO: Add for multiclient support
-;; What we really need to implement is non blocking io operation
+;; TODO: Complete rewrite of server is required because this IO bound
+;; channel is not compatible for listening to client that are non
+;; blocking. Maybe we can create new file called server

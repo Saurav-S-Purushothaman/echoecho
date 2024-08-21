@@ -11,7 +11,6 @@
     (.socket)
     (.bind (InetSocketAddress. port))))
 
-
 (defn unblock!
   [server-socket]
   (.configureBlocking server-socket false))
@@ -120,3 +119,11 @@
 ;; Selector again.
 
 ;; Now read this once, the same process will repeat like a pipeline
+
+;; int bytesRead = inChannel.read(buf); //read into buffer.
+;; Basically means write
+
+;; //read from buffer into channel.
+;; int bytesWritten = inChannel.write (buf);
+;; even though its write, basically what we are doing is reading from
+;; the channel and putting it into the buffer.
