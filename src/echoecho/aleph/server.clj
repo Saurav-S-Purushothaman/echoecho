@@ -14,10 +14,14 @@
   (clojure.repl/doc gloss/finite-frame)
   (clojure.repl/doc s/stream)
   (clojure.repl/doc s/connect)
-  (clojure.repl/doc s/splice))
+  (clojure.repl/doc s/splice)
+  (clojure.repl/doc d/chain)
+  (clojure.repl/source d/chain)
+  (clojure.repl/source s/stream)
+  (clojure.repl/source s/map)
+  )
 
 ;; Gloss is for serialising and deserializing clojure datastructure.
-
 ;; This protocol works as follows:
 ;; Encoding: You give it a Clojure data structure.  pr-str turns that
 ;; data structure into a string.  The string's length is calculated, and
@@ -26,7 +30,6 @@
 ;; length of the string.  It then reads the next length bytes as a
 ;; string.  edn/read-string is applied to this string to convert it back
 ;; into a Clojure data structure.
-
 
 ;; This is super convineint
 (def protocol (gloss/compile-frame (gloss/finite-frame :uint32
@@ -57,3 +60,25 @@
     ;; meaning all the message enqueued by put! go into sink and all
     ;; messages dequeued comes from the source
     (s/splice out (io/decode-stream raw-stream protocol))))
+
+(defn client
+  "Connect to the server and return a single duplex stream.
+  Explanation: tcp/client returns a manifold deferred which yields a
+  duplex stream. We asynchronously compose this using d/chain which will
+  wait for the client to realize and then pass the client to wrap duplex
+  stream"
+  [host port]
+  (d/chain (tcp/client {:host host :port port})
+           #(wrap-duplex-stream protocol %)))
+
+(defn start-server
+  "Creates the server. Takes a handler function as arg, which takes two
+  args i.e, a raw-stream and info (information about the connection) and
+  sets up the stream for taking message."
+  [port handler]
+  (tcp/start-server (fn [raw-stream info]
+                      ;; raw-stream is wrapped in gloss protocol before
+                      ;; being handed out to handler function to handle
+                      (handler (wrap-duplex-stream protocol raw-stream)
+                               info))
+                    {:port port}))
