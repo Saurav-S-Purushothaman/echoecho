@@ -1,4 +1,7 @@
 {:deps {org.clojure/clojure {:mvn/version "1.11.1"}
         com.taoensso/timbre {:mvn/version "5.1.2"}
-        org.clojure/core.async {:mvn/version "1.6.673"}}
+        org.clojure/core.async {:mvn/version "1.6.673"}
+        aleph/aleph {:mvn/version "0.8.1"}
+        org.clj-commons/gloss {:mvn/version "0.3.6"}
+        manifold/manifold {:mvn/version "0.4.3"}}
  :paths ["src"]}
