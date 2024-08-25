@@ -1,7 +1,8 @@
 # echoecho
 
-Echo server that asynchronously connects to any number of clients
-(limited by resource of CPU)
+Echo TCP server which can asynchronously accepts request from multiple
+clients. This is a small POC for creating a TCP server that can accept
+connection from multiple server at same time.
 
 The default port exposed is - 127.0.0.1:10000
 
