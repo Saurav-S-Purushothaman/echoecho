@@ -1,5 +1,5 @@
-(ns echoecho.chatroom
-  (:require [echoecho.room-server :as server]
+(ns echoecho.echo
+  (:require [echoecho.server :as server]
             [manifold.stream :as s])
   (:gen-class))
 

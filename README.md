@@ -1,22 +1,21 @@
 # echoecho
 
-As a starting step, this will act as an echo server that accepts just
-one client.
+Echo server that asynchronously connects to any number of clients
+(limited by resource of CPU)
 
-The default port exposed is - 127.0.0.1:7007
+The default port exposed is - 127.0.0.1:10000
 
 ## Getting Started
 
 To start the program, first clone this repository.
-y
-Start chatroom. A chatroom can either be a `server` or a `client`.
+Start server. A echo can either be a `server` or a `client`.
 You should only have one `server` running as configuring port is not
-allowed as of now. So you need to create a single server and can have
-several connection to that server. Upon starting the chatroom, you will
-be presented with following options
+allowed as of now. Create a single server and can have several
+connection to that server. Upon starting the echo, you will be
+presented with following options
 
 ``` shell
-$ clj -M -m echoecho.chatroom
+$ clj -M -m echoecho.echo
   For being a server, press s
   For being a client, press c
   What are you? :
@@ -31,7 +30,7 @@ process request asynchronously.
 
 
 ``` shell
-$ clj -M -m echoecho.chatroom
+$ clj -M -m echoecho.echo
   For being a server, press s
   For being a client, press c
   What are you? : c
@@ -46,5 +45,3 @@ $ clj -M -m echoecho.chatroom
   Server Response :  more time required
   username  :
 ```
-
-TODO: Instead of echo serve as a chat.

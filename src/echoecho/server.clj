@@ -1,4 +1,4 @@
-(ns echoecho.room-server
+(ns echoecho.server
   (:require
    [aleph.tcp :as tcp]
    [clojure.edn :as edn]
