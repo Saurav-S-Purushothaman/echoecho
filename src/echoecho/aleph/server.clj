@@ -62,7 +62,7 @@
     (s/splice out (io/decode-stream raw-stream protocol))))
 
 (defn client
-  "Connect to the server and return a single duplex stream.
+  "Connect to the server and return a single duplex stream in deferred.
   Explanation: tcp/client returns a manifold deferred which yields a
   duplex stream. We asynchronously compose this using d/chain which will
   wait for the client to realize and then pass the client to wrap duplex
@@ -82,3 +82,33 @@
                       (handler (wrap-duplex-stream protocol raw-stream)
                                info))
                     {:port port}))
+
+
+(defn start-server
+  [handler port]
+  (tcp/start-server (fn [s info]
+                      (handler (wrap-duplex-stream protocol s) info))
+                    {:port port}))
+;;;;; Echo serer starts here ;;;;;
+
+
+(defn echo-handler
+  "Creates a handler function which will apply the `f` to any incoming
+  message, and immediately send back the resul."
+  [f]
+  (fn [raw-stream info]
+    ;; We are connecting the stream to itself
+    (s/connect (s/map f raw-stream) raw-stream)))
+
+
+;; Starting the server
+(def server
+  (start-server (echo-handler inc) 10000))
+
+;; We connect a client to the server, dereferencing the deferred value
+;; returned such that `c` is simply a duplex stream that takes and emits
+;; Clojure values.
+(def c @(client "localhost" 10000))
+
+@(s/put! c 1)
+@(s/take! c)
