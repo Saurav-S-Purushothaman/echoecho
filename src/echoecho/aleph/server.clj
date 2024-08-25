@@ -92,7 +92,7 @@
 ;;;;; Echo serer starts here ;;;;;
 
 
-(defn echo-handler
+(defn handler
   "Creates a handler function which will apply the `f` to any incoming
   message, and immediately send back the resul."
   [f]
@@ -100,15 +100,17 @@
     ;; We are connecting the stream to itself
     (s/connect (s/map f raw-stream) raw-stream)))
 
+(defn start-server!
+  [f port]
+  (start-server (handler f) port))
 
-;; Starting the server
-(def server
-  (start-server (echo-handler inc) 10000))
+(defn connect-server!
+  [host port]
+  @(client host port))
 
-;; We connect a client to the server, dereferencing the deferred value
-;; returned such that `c` is simply a duplex stream that takes and emits
-;; Clojure values.
-(def c @(client "localhost" 10000))
-
-@(s/put! c 1)
-@(s/take! c)
+(comment
+  (def server (start-server (echo-handler echo) 10000))
+  (def c @(client "localhost" 10000))
+  @(s/put! c 1)
+  @(s/take! c)
+  (.close server))
