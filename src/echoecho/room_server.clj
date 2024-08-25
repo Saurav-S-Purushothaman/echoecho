@@ -1,4 +1,4 @@
-(ns echoecho.aleph.server
+(ns echoecho.room-server
   (:require
    [aleph.tcp :as tcp]
    [clojure.edn :as edn]
@@ -7,7 +7,6 @@
    [manifold.deferred :as d]
    [manifold.stream :as s])
   (:gen-class))
-
 
 (comment
   (clojure.repl/doc gloss/compile-frame)
@@ -18,8 +17,7 @@
   (clojure.repl/doc d/chain)
   (clojure.repl/source d/chain)
   (clojure.repl/source s/stream)
-  (clojure.repl/source s/map)
-  )
+  (clojure.repl/source s/map))
 
 ;; Gloss is for serialising and deserializing clojure datastructure.
 ;; This protocol works as follows:
