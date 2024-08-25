@@ -1,6 +1,6 @@
 # echoecho
 
-Echo TCP server which can asynchronously accepts request from multiple
+Echo TCP server which can asynchronously accept requests from multiple
 clients. This is a small POC for creating a TCP server that can accept
 connection from multiple server at same time.
 
